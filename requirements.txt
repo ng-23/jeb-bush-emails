@@ -1,0 +1,6 @@
+docx2txt==0.9 ; (sys_platform == "win32" or sys_platform == "emscripten") and python_version >= "3.12" or (sys_platform != "win32" and sys_platform != "emscripten") and python_version >= "3.12"
+numpy==2.4.2 ; (sys_platform == "win32" or sys_platform == "emscripten") and python_version >= "3.12" or (sys_platform != "win32" and sys_platform != "emscripten") and python_version >= "3.12"
+pandas==3.0.1 ; (sys_platform == "win32" or sys_platform == "emscripten") and python_version >= "3.12" or (sys_platform != "win32" and sys_platform != "emscripten") and python_version >= "3.12"
+python-dateutil==2.9.0.post0 ; (sys_platform == "win32" or sys_platform == "emscripten") and python_version >= "3.12" or (sys_platform != "win32" and sys_platform != "emscripten") and python_version >= "3.12"
+six==1.17.0 ; (sys_platform == "win32" or sys_platform == "emscripten") and python_version >= "3.12" or (sys_platform != "win32" and sys_platform != "emscripten") and python_version >= "3.12"
+tzdata==2025.3 ; python_version >= "3.12" and (sys_platform == "win32" or sys_platform == "emscripten")
