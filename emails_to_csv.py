@@ -241,7 +241,7 @@ def main(args:Namespace):
 
     if args.log_to_file:
         file_handler = FileHandler(
-            filename=f'{os.path.basename(emails_dir)}_emails_conversion.log'
+            filename=f'{os.path.basename(emails_dir) if not args.batch_name else args.batch_name}_emails_conversion.log'
         )
         file_handler.setFormatter(log_formatter)
         logger.addHandler(file_handler)
