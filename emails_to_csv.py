@@ -45,6 +45,13 @@ def get_args_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
+        '--batch-name',
+        type=str,
+        default='',
+        help='Identifier to use for "batch" of emails. If unspecified, defaults to name of parent directory containing email files.'
+    )
+
+    parser.add_argument(
         '--log-to-file',
         action='store_true',
         help='If specified, write log statements to a file'
@@ -52,9 +59,9 @@ def get_args_parser() -> ArgumentParser:
 
     return parser
 
-def parse_email(email_pth:str, remove_pth:bool=False) -> DataFrame:
+def parse_email(email_pth:str, batch_name:str='', remove_pth:bool=False) -> DataFrame:
     features = {
-        'dirname': [''], # parent directory name containing email
+        'batch_name': [''], # identifier for batch of emails being processed
         'fname': [''], # file name of email
         'from': [''], # sender's email address
         'sent_time': [None], # date+time email was sent
@@ -65,7 +72,7 @@ def parse_email(email_pth:str, remove_pth:bool=False) -> DataFrame:
         'body': [''], # email body contents
         }
 
-    features['dirname'] = [os.path.dirname(email_pth).split('/')[-1]]
+    features['batch_name'] = [os.path.dirname(email_pth).split('/')[-1] if not batch_name else batch_name]
     features['fname'] = [os.path.basename(email_pth)]
     body_reached = False
     body_contents = []
@@ -139,12 +146,11 @@ def docx_to_tmp_txt(docx_pth: str):
 
     return tmp_pth
 
-def extract_features(emails_dir:str, chunk_size:int|None=None, output_dir:str='', logger:Logger|None=None):
+def extract_features(emails_dir:str, batch_name:str='', chunk_size:int|None=None, output_dir:str='', logger:Logger|None=None):
     feature_chunks = []
     skipped_emails = []
 
-    dirname = os.path.basename(emails_dir)
-    output_fname = f'{dirname}_emails_{datetime.now().strftime("%m%d%y-%H%M%S")}.csv'
+    output_fname = f'{batch_name if batch_name else os.path.dirname(emails_dir).split('/')[-1]}_emails_{datetime.now().strftime("%m%d%y-%H%M%S")}.csv'
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
     output_pth = os.path.join(args.output_dir, output_fname)
@@ -165,11 +171,10 @@ def extract_features(emails_dir:str, chunk_size:int|None=None, output_dir:str=''
                 email_pth = os.path.join(emails_dir, f.name)
                 try:
                     if is_txt:
-                        email_features = parse_email(email_pth)
+                        email_features = parse_email(email_pth, batch_name=batch_name)
                     elif is_docx:
                         tmp_txt_pth = docx_to_tmp_txt(email_pth)
-                        email_features = parse_email(tmp_txt_pth, remove_pth=True)
-                        email_features['dirname'] = dirname
+                        email_features = parse_email(tmp_txt_pth, batch_name=batch_name, remove_pth=True)
                         email_features['fname'] = f.name
                 except Exception as e:
                     logger.error(f'Error processing email {email_pth}: {e} ... Skipping file')
@@ -241,9 +246,10 @@ def main(args:Namespace):
         file_handler.setFormatter(log_formatter)
         logger.addHandler(file_handler)
 
-    logger.info(f'Began processing of emails in {emails_dir}')
+    batch_str = ' ' if not args.batch_name else f' {args.batch_name} '
+    logger.info(f'Began processing of{batch_str}emails in {emails_dir}')
     
-    extract_features(emails_dir, chunk_size=chunk_size, output_dir=args.output_dir, logger=logger)
+    extract_features(emails_dir, batch_name=args.batch_name, chunk_size=chunk_size, output_dir=args.output_dir, logger=logger)
 
     logger.info(f'Done processing emails in {emails_dir}')
 
